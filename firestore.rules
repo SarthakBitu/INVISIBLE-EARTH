@@ -1,0 +1,263 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    // Entity Validators
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'homeBase', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && (!('homeBase' in data) || (data.homeBase is string && data.homeBase.size() <= 80))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWishlistItem(data, userId, destId) {
+      return data.keys().hasAll(['uid', 'destinationId', 'destinationName', 'savedAt'])
+        && data.keys().hasOnly(['uid', 'destinationId', 'destinationName', 'savedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.destinationId is string && data.destinationId == destId && isValidId(data.destinationId)
+        && data.destinationName is string && data.destinationName.size() >= 1 && data.destinationName.size() <= 120
+        && data.savedAt is timestamp;
+    }
+
+    function isValidAdventurePlan(data, userId, planId) {
+      return data.keys().hasAll([
+          'id', 'uid', 'destinationId', 'destinationName',
+          'startDate', 'endDate', 'budgetTier', 'partyType',
+          'activities', 'estimatedTotalUsd', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'uid', 'destinationId', 'destinationName',
+          'startDate', 'endDate', 'budgetTier', 'partyType',
+          'activities', 'estimatedTotalUsd', 'createdAt'
+        ])
+        && data.id is string && data.id == planId && isValidId(data.id)
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.destinationId is string && isValidId(data.destinationId)
+        && data.destinationName is string && data.destinationName.size() >= 1 && data.destinationName.size() <= 120
+        && data.startDate is string && data.startDate.size() >= 4 && data.startDate.size() <= 20
+        && data.endDate is string && data.endDate.size() >= 4 && data.endDate.size() <= 20
+        && data.budgetTier in ['Budget', 'Mid-Range', 'Luxury']
+        && data.partyType in ['Solo', 'Couple', 'Friends', 'Family']
+        && data.activities is list && data.activities.size() <= 12
+        && (data.activities.size() == 0 || data.activities[0] is string)
+        && data.estimatedTotalUsd is number && data.estimatedTotalUsd >= 0 && data.estimatedTotalUsd <= 500000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidStory(data, storyId) {
+      return data.keys().hasAll([
+          'id', 'authorUid', 'authorName', 'authorRole',
+          'destinationId', 'destinationName', 'country',
+          'title', 'excerpt', 'body', 'imageUrl',
+          'rating', 'likesCount', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'authorUid', 'authorName', 'authorRole',
+          'destinationId', 'destinationName', 'country',
+          'title', 'excerpt', 'body', 'imageUrl',
+          'rating', 'likesCount', 'sharedItinerarySummary',
+          'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == storyId && isValidId(data.id)
+        && data.authorUid is string && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80
+        && data.authorRole is string && data.authorRole.size() >= 1 && data.authorRole.size() <= 60
+        && data.destinationId is string && isValidId(data.destinationId)
+        && data.destinationName is string && data.destinationName.size() >= 1 && data.destinationName.size() <= 120
+        && data.country is string && data.country.size() >= 1 && data.country.size() <= 80
+        && data.title is string && data.title.size() >= 3 && data.title.size() <= 160
+        && data.excerpt is string && data.excerpt.size() >= 3 && data.excerpt.size() <= 240
+        && data.body is string && data.body.size() >= 10 && data.body.size() <= 6000
+        && data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 350000
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.likesCount is int && data.likesCount >= 0
+        && (!('sharedItinerarySummary' in data) || (data.sharedItinerarySummary is string && data.sharedItinerarySummary.size() <= 220))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStoryLike(data, storyId, userId) {
+      return data.keys().hasAll(['uid', 'storyId', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'storyId', 'createdAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.storyId is string && data.storyId == storyId && isValidId(data.storyId)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidReview(data, reviewId) {
+      return data.keys().hasAll([
+          'id', 'authorUid', 'authorName', 'location',
+          'destinationId', 'rating', 'comment', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'authorUid', 'authorName', 'location',
+          'destinationId', 'rating', 'comment', 'createdAt'
+        ])
+        && data.id is string && data.id == reviewId && isValidId(data.id)
+        && data.authorUid is string && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80
+        && data.location is string && data.location.size() <= 80
+        && data.destinationId is string && isValidId(data.destinationId)
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() >= 3 && data.comment.size() <= 1200
+        && data.createdAt is timestamp;
+    }
+
+    // Users Public Profile (Zero PII)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow create: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'homeBase', 'updatedAt']);
+
+      // Private PII Subcollection
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && isOwner(userId);
+        allow create, update: if isValidId(userId)
+          && docId == 'account'
+          && isVerifiedOwner(userId)
+          && isValidPrivateInfo(incoming(), userId)
+          && incoming().updatedAt == request.time;
+      }
+
+      // User Wishlist Bookmarks
+      match /wishlist/{destinationId} {
+        allow get: if isValidId(userId) && isValidId(destinationId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(destinationId)
+          && isVerifiedOwner(userId)
+          && isValidWishlistItem(incoming(), userId, destinationId)
+          && incoming().savedAt == request.time;
+        allow delete: if isValidId(userId) && isValidId(destinationId) && isVerifiedOwner(userId);
+      }
+
+      // User Saved Adventure Plans
+      match /plans/{planId} {
+        allow get: if isValidId(userId) && isValidId(planId) && isOwner(userId);
+        allow list: if isOwner(userId) && resource.data.uid == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(planId)
+          && isVerifiedOwner(userId)
+          && isValidAdventurePlan(incoming(), userId, planId)
+          && incoming().createdAt == request.time;
+        allow delete: if isValidId(userId) && isValidId(planId) && isVerifiedOwner(userId);
+      }
+    }
+
+    // Community Travel Stories
+    match /stories/{storyId} {
+      allow get: if isValidId(storyId);
+      allow list: if true;
+      allow create: if isValidId(storyId)
+        && isVerifiedUser()
+        && isValidStory(incoming(), storyId)
+        && incoming().authorUid == request.auth.uid
+        && incoming().likesCount == 0
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(storyId)
+        && isVerifiedUser()
+        && isValidStory(incoming(), storyId)
+        && incoming().id == existing().id
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            existing().authorUid == request.auth.uid
+            && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'excerpt', 'body', 'updatedAt'])
+          )
+          ||
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['likesCount', 'updatedAt'])
+            && incoming().likesCount == existing().likesCount + 1
+            && existsAfter(/databases/$(database)/documents/stories/$(storyId)/likes/$(request.auth.uid))
+          )
+        );
+      allow delete: if isValidId(storyId)
+        && isVerifiedUser()
+        && existing().authorUid == request.auth.uid;
+
+      match /likes/{userId} {
+        allow get: if isValidId(storyId) && isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(storyId)
+          && isValidId(userId)
+          && isVerifiedOwner(userId)
+          && isValidStoryLike(incoming(), storyId, userId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/stories/$(storyId))
+          && getAfter(/databases/$(database)/documents/stories/$(storyId)).data.likesCount
+             == get(/databases/$(database)/documents/stories/$(storyId)).data.likesCount + 1;
+      }
+    }
+
+    // Community Destination Reviews
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isValidId(reviewId)
+        && isVerifiedUser()
+        && isValidReview(incoming(), reviewId)
+        && incoming().authorUid == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow delete: if isValidId(reviewId)
+        && isVerifiedUser()
+        && existing().authorUid == request.auth.uid;
+    }
+  }
+}

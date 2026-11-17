@@ -1,0 +1,8 @@
+{
+  "name": "WILD EARTH – Explore Beyond Limits",
+  "description": "Discover extraordinary mountains, rivers, waterfalls, lakes, forests, glaciers, valleys, deserts, islands, and hidden natural wonders across every continent.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

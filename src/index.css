@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes kenBurnsSlow {
+  0% {
+    transform: scale(1.0) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.09) translate3d(-1.5%, -1%, 0);
+  }
+  100% {
+    transform: scale(1.0) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scrollDrop {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* PowerPoint-Style Radical & Radial Slide Transitions */
+@keyframes pptRadialIris {
+  0% {
+    clip-path: circle(0% at 50% 50%);
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+  100% {
+    clip-path: circle(150% at 50% 50%);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pptRadicalPushNext {
+  0% {
+    transform: translate3d(12%, 0, 0) scale(0.94) rotateY(-8deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pptRadicalPushPrev {
+  0% {
+    transform: translate3d(-12%, 0, 0) scale(0.94) rotateY(8deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes pptCubeTurn {
+  0% {
+    transform: perspective(1400px) rotateY(22deg) scale(0.92);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(1400px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pptShutterReveal {
+  0% {
+    clip-path: inset(0 50% 0 50%);
+    transform: scale(1.06);
+    opacity: 0.3;
+  }
+  100% {
+    clip-path: inset(0 0% 0 0%);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pptPopupExpand {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes radialRipple {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.animate-ken-burns {
+  animation: kenBurnsSlow 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-scroll-drop {
+  animation: scrollDrop 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 24s linear infinite;
+}
+
+.ppt-transition-iris {
+  animation: pptRadialIris 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-transition-push-next {
+  animation: pptRadicalPushNext 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-transition-push-prev {
+  animation: pptRadicalPushPrev 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-transition-cube {
+  animation: pptCubeTurn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-transition-shutter {
+  animation: pptShutterReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-popup-card {
+  animation: pptPopupExpand 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ppt-radial-ripple {
+  animation: radialRipple 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-ken-burns,
+  .animate-scroll-drop,
+  .animate-spin-slow,
+  .ppt-transition-iris,
+  .ppt-transition-push-next,
+  .ppt-transition-push-prev,
+  .ppt-transition-cube,
+  .ppt-transition-shutter,
+  .ppt-popup-card,
+  .ppt-radial-ripple {
+    animation: none !important;
+  }
+}
